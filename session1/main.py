@@ -3,6 +3,7 @@
 """The user interface for our app"""
 
 import os,sys
+import gevent
 
 # Import Qt modules
 from PyQt4 import QtCore,QtGui
@@ -19,6 +20,18 @@ class Main(QtGui.QMainWindow):
         self.ui=Ui_MainWindow()
         self.ui.setupUi(self)
 
+def mainloop(app):
+    while True:
+        app.processEvents()
+        while app.hasPendingEvents():
+            app.processEvents()
+            gevent.sleep()
+        gevent.sleep() # don't appear to get here but cooperate again
+
+def testprint():
+    print 'this is running'
+    gevent.spawn_later(1, testprint)
+
 def main():
     # Again, this is boilerplate, it's going to be the same on 
     # almost every app you write
@@ -26,7 +39,9 @@ def main():
     window=Main()
     window.show()
     # It's exec_ because exec is a reserved word in Python
-    sys.exit(app.exec_())
+    #sys.exit(app.exec_())
+    gevent.joinall([gevent.spawn(testprint), gevent.spawn(mainloop, app)])
+    print 'done'
     
 
 if __name__ == "__main__":
